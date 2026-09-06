@@ -704,6 +704,9 @@ table.grid-table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
 .grid-table td input { width: 100%; border: 1px solid var(--line); border-radius: var(--r-inner); padding: 6px 8px; }
 .grid-table td.num input { text-align: right; font-variant-numeric: tabular-nums; }
 .grid-table tr:hover td { background: var(--card-2); }
+/* An inactive person stays visible and editable, just visibly stood down. */
+.grid-table tr.is-inactive td { opacity: .5; }
+.grid-table tr.is-inactive td:first-child { opacity: 1; }
 .scroll-x { overflow-x: auto; }
 
 /* Derived-target strip beneath each roster row. Read-only by design: these
