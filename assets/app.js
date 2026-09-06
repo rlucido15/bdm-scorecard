@@ -16,7 +16,7 @@
    * 1. CONNECTION  — paste your deployed Apps Script /exec URL here
    * ============================================================ */
   var PIPELINE_API = window.MOXIE_API_URL ||
-    'https://script.google.com/macros/s/PASTE_PIPELINE_DEPLOYMENT_ID/exec';
+    'https://script.google.com/macros/s/AKfycbyCHntYkVEp9Mi9QhB9Ys9MxreydF_RVQpVGR0d2ZLTJtwBeCvwfNOP-KYgsUQxHmvT/exec';
 
   /* ============================================================
    * 2. Small helpers
