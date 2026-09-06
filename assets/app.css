@@ -323,6 +323,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .tile--coral .htile__ctxlabel { color: rgba(255, 255, 255, .88); }
 .tile--coral .htile__ctxvalue { color: #fff; }
+.lifetime__missing {
+  margin: 0; font-size: 13px; line-height: 1.5;
+  color: rgba(255, 255, 255, .95);
+}
 
 /* Two cards sharing one grid column, stretched so the pair spans the same
    height as the tall tile beside them. */
