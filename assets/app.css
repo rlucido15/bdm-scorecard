@@ -28,7 +28,10 @@
   /* Signal — two sets, because dark grounds need brighter values */
   --green: #12946A;
   --green-on-dark: #2DD4A0;
-  --coral: #C7481F;          /* text-safe on white */
+  /* Two corals, split by job. Graphics can carry the brighter brand value;
+     small bold text needs the deeper one to stay legible on white. */
+  --coral: #D8502A;          /* text on light grounds */
+  --coral-graphic: #F46744;  /* rings, bars, hatching */
   --coral-on-dark: #FF8A6B;  /* brand orange-lift, reads on near-black */
 
   --r-tile: 16px;
@@ -301,6 +304,64 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .tile--brand .htile__ctxlabel { color: rgba(255, 255, 255, .85); }
 .tile--brand .htile__ctxvalue { color: #fff; }
 
+/* Coral sibling of the brand tile. */
+.tile--coral {
+  background: linear-gradient(152deg, #FF8A6B 0%, var(--orange) 52%, #D2481F 100%);
+  border-color: rgba(255, 255, 255, .22);
+  color: #fff;
+  box-shadow: 0 14px 32px rgba(212, 72, 31, .30);
+}
+.tile--coral .tile__head { border-bottom-color: rgba(255, 255, 255, .24); }
+.tile--coral .tile__title { color: #fff; }
+.tile--coral .tile__title::before { background: rgba(255, 255, 255, .85); }
+.tile--coral .tile__note { color: rgba(255, 255, 255, .82); }
+.tile--coral .htile__label { color: rgba(255, 255, 255, .82); }
+.tile--coral .htile__value { color: #fff; }
+.tile--coral .htile__ctxitem {
+  background: rgba(255, 255, 255, .18);
+  border-color: rgba(255, 255, 255, .32);
+}
+.tile--coral .htile__ctxlabel { color: rgba(255, 255, 255, .88); }
+.tile--coral .htile__ctxvalue { color: #fff; }
+
+/* Two cards sharing one grid column, stretched so the pair spans the same
+   height as the tall tile beside them. */
+.tile-stack {
+  grid-column: span 12;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-self: stretch;
+  min-width: 0;
+}
+.tile-stack > .tile { flex: 1 1 0; display: flex; flex-direction: column; }
+.tile-stack > .tile .tile__body { flex: 1; display: flex; align-items: center; }
+.tile-stack > .tile .moneytile { width: 100%; }
+
+/* Figure left, pills stacked right. Type is set down from the hero scale
+   here: these cards share a fixed height with the chart beside them, so
+   the content has to fit rather than the card growing to suit it. */
+.moneytile {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; padding: 4px 0;
+}
+.moneytile__main { min-width: 0; flex: 1 1 auto; }
+.moneytile .htile__label {
+  font-size: 9.5px; letter-spacing: .1em; line-height: 1.4;
+  margin: 0 0 7px; max-width: 16ch;
+}
+.moneytile .htile__value { font-size: 29px; letter-spacing: -.028em; }
+
+.moneytile__pills { display: flex; flex-direction: column; gap: 7px; flex: 0 0 auto; }
+.moneytile__pills .htile__ctxitem {
+  justify-content: space-between;
+  min-width: 124px;
+  padding: 6px 12px;
+  gap: 10px;
+}
+.moneytile__pills .htile__ctxlabel { font-size: 8.5px; letter-spacing: .1em; }
+.moneytile__pills .htile__ctxvalue { font-size: 13.5px; }
+
 .tile--dark {
   background: linear-gradient(158deg, var(--night-2), var(--night));
   border-color: rgba(255,255,255,.09);
@@ -352,7 +413,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .tile--dark .mbar { background: rgba(255,255,255,.13); }
 .mbar__fill { position: absolute; inset: 0 auto 0 0; height: 6px; border-radius: 99px; background: linear-gradient(90deg, var(--cyan-deep), var(--cyan)); }
 .mbar__fill--ahead  { background: linear-gradient(90deg, #0E7C58, var(--green)); }
-.mbar__fill--behind { background: linear-gradient(90deg, #A83B18, var(--orange)); }
+.mbar__fill--behind { background: linear-gradient(90deg, #E2542E, var(--orange-lift)); }
 .mbar__pace { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink-2); opacity: .45; border-radius: 2px; }
 .tile--dark .mbar__pace { background: #fff; opacity: .6; }
 
@@ -493,7 +554,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .fitem__label { font-size: 14.5px; font-weight: 600; color: var(--ink); }
 .fdelta { font-size: 13px; font-weight: 700; }
 .fdelta--over { color: var(--green); }
-.fdelta--under { color: var(--coral); }
+.fdelta--under { color: #E2542E; }
 
 .fbar {
   position: relative; height: 13px; margin-top: 11px;
@@ -514,9 +575,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .is-under .fbar__proj {
   background: repeating-linear-gradient(135deg,
-    rgba(199, 72, 31, .5) 0 4px,
-    rgba(199, 72, 31, .12) 4px 8px);
-  border-right-color: rgba(199, 72, 31, .5);
+    rgba(244, 103, 68, .62) 0 4px,
+    rgba(244, 103, 68, .16) 4px 8px);
+  border-right-color: rgba(244, 103, 68, .6);
 }
 .fbar__goal {
   position: absolute; top: -5px; bottom: -5px; width: 0;
@@ -619,7 +680,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .notice { border-radius: var(--r-inner); padding: 13px 16px; font-size: 14px; margin-top: 14px; border: 1px solid transparent; }
 .notice--warn  { background: #FDF4E3; border-color: #EFDCB6; color: #6B4708; }
-.notice--error { background: #FDEDE7; border-color: #F6CDBB; color: var(--coral); }
+.notice--error { background: #FDEDE7; border-color: #F8CFBD; color: var(--coral); }
 .notice--ok    { background: #E7F6F0; border-color: #BFE5D6; color: var(--green); }
 .notice--info  { background: #E9F6F9; border-color: #C0E5EE; color: var(--cyan-deep); }
 .notice p { margin: 0 0 6px; }
@@ -635,6 +696,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @media (min-width: 760px) {
   .htile { grid-column: span 6; }
   .htile--feature { grid-column: span 12; }
+  .tile-stack { grid-column: span 6; }
   .tile--3 { grid-column: span 6; }
   .tile--4 { grid-column: span 6; }
   .tile--5 { grid-column: span 6; }
@@ -645,12 +707,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @media (min-width: 1060px) {
   .htile { grid-column: span 3; }
   .htile--feature { grid-column: span 6; }
+  .tile-stack { grid-column: span 4; }
   .tile--3 { grid-column: span 3; }
   .tile--4 { grid-column: span 4; }
   .tile--5 { grid-column: span 5; }
   .tile--6 { grid-column: span 6; }
   .tile--7 { grid-column: span 7; }
-  .tile--8 { grid-column: span 8; }
+  .tile--8 { grid-column: span 8; align-self: stretch; }
   .tile--12 { grid-column: span 12; }
 }
 
@@ -870,6 +933,12 @@ tr.derived:hover td { background: transparent; }
 .right { text-align: right; }
 
 /* ---------- Responsive & a11y ---------- */
+
+@media (max-width: 560px) {
+  .moneytile { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .moneytile__pills { flex-direction: row; flex-wrap: wrap; }
+  .moneytile__pills .htile__ctxitem { min-width: 0; }
+}
 
 @media (max-width: 640px) {
   .stage { padding: 20px 0 26px; }
