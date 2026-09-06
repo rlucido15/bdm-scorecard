@@ -1,12 +1,15 @@
 /* Moxie Scorecard — bootstrap/loader
- * Keeps index.html lean. Loads styles + app with a cache-busting version
- * so GitHub Pages doesn't serve a stale build after you push.
- * Bump BUILD after each deploy.
+ * Keeps index.html lean. Loads styles + app with a cache-busting version.
+ *
+ * Browsers and GitHub's CDN cache assets/app.js and assets/app.css. Appending
+ * ?v=BUILD makes a changed file look like a new address, which forces a fresh
+ * fetch. Change BUILD to anything new whenever you upload a changed asset,
+ * or people will keep seeing the old version.
  */
 (function () {
   'use strict';
 
-  var BUILD = '2026.09.03.1';
+  var BUILD = '2026.09.05.1';
 
   function asset(path) {
     return 'assets/' + path + '?v=' + BUILD;
