@@ -869,64 +869,86 @@
   function panelTargets(host) {
     var st = state.config.settings || {};
 
-    var rows = state.roster.map(function (u, i) {
-      var t = u.targets || {};
-      return '<tr data-i="' + i + '">' +
-        '<td>' + esc(u.name || '—') + '</td>' +
-        '<td class="num"><input data-f="bdmBps" type="number" min="0" step="1" value="' + esc(u.bdmBps || 0) + '"></td>' +
-        '<td class="num"><input data-f="sbdmBps" type="number" min="0" step="1" value="' + esc(u.sbdmBps || 0) + '"></td>' +
-        '<td class="num"><input data-t="earningsAnnual" type="number" min="0" step="500" value="' +
-          esc(t.earningsAnnual == null ? '' : t.earningsAnnual) + '"></td>' +
-        '<td class="num"><input data-t="avgLoanAmount" type="number" min="0" step="1000" value="' +
-          esc(t.avgLoanAmount == null ? '' : t.avgLoanAmount) + '"></td>' +
-        '<td class="num"><input data-t="newDownlineAnnual" type="number" min="0" step="1" value="' +
-          esc(t.newDownlineAnnual == null ? '' : t.newDownlineAnnual) + '"></td>' +
-        '<td class="num"><input data-t="totalDownline" type="number" min="0" step="1" value="' +
-          esc(t.totalDownline == null ? '' : t.totalDownline) + '"></td>' +
-        '</tr>' +
-        '<tr class="derived" data-d="' + i + '"><td colspan="7"></td></tr>';
-    }).join('');
-
     host.innerHTML = '<div class="panel">' +
-      notice('info', '<p>Only two figures are entered per person: <strong>annual target ' +
-        'earnings</strong> and <strong>average loan amount</strong>. Every other target ' +
-        'is derived from them and the rates below, and shown in grey beneath each row.</p>' +
-        '<p>Quarterly is the annual figure divided by four; monthly by twelve. ' +
-        'Downline goals stay manual, since nothing in the loan data predicts them.</p>') +
 
-      '<div class="row">' +
-        '<div class="field" style="min-width:130px"><label for="cr">Applications that close (%)</label>' +
-        '<input id="cr" class="funnel-in" type="number" min="1" max="100" step="1" value="' + esc(st.closeRate == null ? 25 : st.closeRate) + '"></div>' +
-        '<div class="field" style="min-width:130px"><label for="rr">Applications rescinded (%)</label>' +
-        '<input id="rr" class="funnel-in" type="number" min="0" max="100" step="1" value="' + esc(st.rescindRate == null ? 35 : st.rescindRate) + '"></div>' +
-        '<div class="field" style="min-width:130px"><label for="ip">Still in pipeline (%)</label>' +
-        '<input id="ip" class="funnel-in" type="number" min="0" max="100" step="1" value="' + esc(st.inPipelineRate == null ? 40 : st.inPipelineRate) + '"></div>' +
-        '<div class="field" style="min-width:160px"><label for="pbasis">Pipeline size from</label>' +
-        '<select id="pbasis">' +
-          '<option value="share"' + ((st.pipelineBasis || 'share') === 'share' ? ' selected' : '') + '>the in-pipeline %</option>' +
-          '<option value="dwell"' + (st.pipelineBasis === 'dwell' ? ' selected' : '') + '>dwell across all loans</option>' +
-        '</select></div>' +
-        '<div class="field" style="min-width:150px"><label for="dw">Dwell, all loans (days)</label>' +
-        '<input id="dw" type="number" min="1" max="1095" step="1" value="' + esc(st.dwellDays == null ? 146 : st.dwellDays) + '"></div>' +
-        '<div class="field" style="min-width:160px"><label for="tc">Target cycle time, funded (days)</label>' +
-        '<input id="tc" type="number" min="1" max="365" step="1" value="' + esc(st.targetCycleDays == null ? 58 : st.targetCycleDays) + '"></div>' +
-        '<div class="field" style="min-width:130px"><label for="pa">Pre-approved or processing (%)</label>' +
-        '<input id="pa" type="number" min="0" max="100" step="1" value="' + esc(st.preApprovedRate == null ? 20 : st.preApprovedRate) + '"></div>' +
-        '<div class="field" style="min-width:150px"><label for="pb">measured against</label>' +
-        '<select id="pb">' +
-          '<option value="net"' + ((st.preApprovedBasis || 'net') === 'net' ? ' selected' : '') + '>apps less rescinds</option>' +
-          '<option value="applications"' + (st.preApprovedBasis === 'applications' ? ' selected' : '') + '>all applications</option>' +
-          '<option value="pipeline"' + (st.preApprovedBasis === 'pipeline' ? ' selected' : '') + '>loans in pipeline</option>' +
-        '</select></div>' +
-      '</div>' +
-      '<div id="funnel-check"></div>' +
+      /* ---- Section one: the model ---- */
+      '<section class="sect">' +
+        '<div class="sect__head">' +
+          '<h3 class="sect__title">The funnel model</h3>' +
+          '<p class="sect__note">These rates apply to everyone. They turn each ' +
+            'person\'s earnings goal into the rest of their targets.</p>' +
+        '</div>' +
+        '<div class="sect__body">' +
+          '<div class="fieldgrid">' +
+            '<div class="field"><label for="cr">Applications that close</label>' +
+            '<div class="unitwrap"><input id="cr" type="number" min="1" max="100" step="1" value="' +
+              esc(st.closeRate == null ? 25 : st.closeRate) + '"><span class="unit">%</span></div></div>' +
+            '<div class="field"><label for="rr">Applications rescinded</label>' +
+            '<div class="unitwrap"><input id="rr" type="number" min="0" max="100" step="1" value="' +
+              esc(st.rescindRate == null ? 35 : st.rescindRate) + '"><span class="unit">%</span></div></div>' +
+            '<div class="field"><label for="ip">Still in pipeline</label>' +
+            '<div class="unitwrap"><input id="ip" type="number" min="0" max="100" step="1" value="' +
+              esc(st.inPipelineRate == null ? 40 : st.inPipelineRate) + '"><span class="unit">%</span></div></div>' +
+          '</div>' +
+          '<div id="funnel-check"></div>' +
+          '<div class="fieldgrid" style="margin-top:14px">' +
+            '<div class="field"><label for="pa">Pre-approved or processing</label>' +
+            '<div class="unitwrap"><input id="pa" type="number" min="0" max="100" step="1" value="' +
+              esc(st.preApprovedRate == null ? 20 : st.preApprovedRate) + '"><span class="unit">%</span></div></div>' +
+            '<div class="field"><label for="pb">measured against</label>' +
+            '<select id="pb">' +
+              '<option value="net"' + ((st.preApprovedBasis || 'net') === 'net' ? ' selected' : '') + '>apps less rescinds</option>' +
+              '<option value="applications"' + (st.preApprovedBasis === 'applications' ? ' selected' : '') + '>all applications</option>' +
+              '<option value="pipeline"' + (st.preApprovedBasis === 'pipeline' ? ' selected' : '') + '>loans in pipeline</option>' +
+            '</select></div>' +
+            '<div class="field"><label for="pbasis">Pipeline size from</label>' +
+            '<select id="pbasis">' +
+              '<option value="share"' + ((st.pipelineBasis || 'share') === 'share' ? ' selected' : '') + '>the in-pipeline %</option>' +
+              '<option value="dwell"' + (st.pipelineBasis === 'dwell' ? ' selected' : '') + '>dwell across all loans</option>' +
+            '</select></div>' +
+            '<div class="field"><label for="dw">Dwell, all loans</label>' +
+            '<div class="unitwrap"><input id="dw" type="number" min="1" max="1095" step="1" value="' +
+              esc(st.dwellDays == null ? 146 : st.dwellDays) + '"><span class="unit">days</span></div></div>' +
+            '<div class="field"><label for="tc">Target cycle time</label>' +
+            '<div class="unitwrap"><input id="tc" type="number" min="1" max="365" step="1" value="' +
+              esc(st.targetCycleDays == null ? 58 : st.targetCycleDays) + '"><span class="unit">days</span></div></div>' +
+          '</div>' +
+        '</div>' +
+      '</section>' +
 
-      '<div class="scroll-x"><table class="grid-table"><thead><tr>' +
-        '<th style="width:22%">Person or pair</th>' +
-        '<th class="num">BDM bps</th><th class="num">sBDM bps</th>' +
-        '<th class="num">Target earnings, year</th><th class="num">Average loan amount</th>' +
-        '<th class="num">New downline, year</th><th class="num">Total downline</th>' +
-      '</tr></thead><tbody id="targets-body">' + rows + '</tbody></table></div>' +
+      /* ---- Section two: people ---- */
+      '<section class="sect">' +
+        '<div class="sect__head sect__head--split">' +
+          '<div>' +
+            '<h3 class="sect__title">People</h3>' +
+            '<p class="sect__note">Enter a comp rate and an earnings goal. ' +
+              'Average loan amount is prefilled from funded loans in the sheet.</p>' +
+          '</div>' +
+          '<div class="searchbox">' +
+            '<input id="roster-search" type="search" placeholder="Search by name" autocomplete="off">' +
+            '<span class="searchbox__count" id="search-count"></span>' +
+          '</div>' +
+        '</div>' +
+        '<div id="bps-warn"></div>' +
+        '<div class="scroll-x"><table class="grid-table grid-table--targets">' +
+          '<thead>' +
+            '<tr class="grouprow">' +
+              '<th></th>' +
+              '<th colspan="2" class="grouphead">Compensation</th>' +
+              '<th colspan="2" class="grouphead">Goal inputs</th>' +
+              '<th colspan="2" class="grouphead">Downline</th>' +
+            '</tr>' +
+            '<tr>' +
+              '<th style="width:20%">Person or pair</th>' +
+              '<th class="num">BDM bps</th><th class="num">sBDM bps</th>' +
+              '<th class="num">Earnings goal, year</th><th class="num">Average loan</th>' +
+              '<th class="num">New, year</th><th class="num">Total</th>' +
+            '</tr>' +
+          '</thead>' +
+          '<tbody id="targets-body"></tbody>' +
+        '</table></div>' +
+      '</section>' +
+
       savebar('save-targets') + '</div>';
 
     function settingsNow() {
@@ -942,31 +964,61 @@
       };
     }
 
-    /* The three outcomes of an application are exhaustive, so they have to
-       total 100. Anything else silently distorts every derived target. */
     function checkFunnel(st2) {
       var sum = st2.closeRate + st2.rescindRate + st2.inPipelineRate;
       var host2 = $('#funnel-check');
-      /* Only warn when the dwell basis is actually selected, and warn about
-         the trap that matters: a dwell taken from funded loans alone. */
       var mismatch = '';
       if (st2.pipelineBasis === 'dwell') {
-        var impliedShare = (st2.dwellDays / 365) * 100;
         mismatch = notice('warn', '<p>A ' + Math.round(st2.dwellDays) + '-day dwell puts ' +
-          impliedShare.toFixed(0) + '% of applications in the pipeline at any moment, against ' +
-          'the ' + Math.round(st2.inPipelineRate) + '% in the field above.</p>' +
-          '<p>This figure must cover <strong>every</strong> application, including ones that ' +
-          'stall or die. Cycle time on funded loans is far shorter, because loans that never ' +
-          'moved are missing from it — using it here would size the pipeline off only the ' +
-          'loans that behaved.</p>');
+          ((st2.dwellDays / 365) * 100).toFixed(0) + '% of applications in the pipeline at ' +
+          'any moment, against the ' + Math.round(st2.inPipelineRate) + '% above. This figure ' +
+          'must cover <strong>every</strong> application, including ones that stall or die.</p>');
       }
-      if (Math.round(sum) === 100) {
-        host2.innerHTML = notice('ok', '<p>Closed, rescinded and in-pipeline total 100%.</p>') + mismatch;
-      } else {
-        host2.innerHTML = notice('warn', '<p>Closed, rescinded and in-pipeline total ' +
-          Math.round(sum) + '%, not 100%. Every application ends up in exactly one of ' +
-          'those three, so the derived targets below are distorted until they balance.</p>');
-      }
+      host2.innerHTML = (Math.round(sum) === 100
+        ? notice('ok', '<p>Closed, rescinded and in-pipeline total 100%.</p>')
+        : notice('warn', '<p>These total ' + Math.round(sum) + '%, not 100%. Every application ' +
+            'ends in exactly one of the three, so the targets below are distorted ' +
+            'until they balance.</p>')) + mismatch;
+    }
+
+    /* Rows are rebuilt rather than patched, so the search filter and the
+       derived figures can never disagree with the inputs. */
+    function drawRows() {
+      var q = ($('#roster-search').value || '').trim().toLowerCase();
+      var shown = 0;
+      var html = state.roster.map(function (u, i) {
+        if (q && String(u.name || '').toLowerCase().indexOf(q) === -1) return '';
+        shown++;
+        var t = u.targets || {};
+        var m = state.measured && state.measured[u.name];
+        var avgVal = t.avgLoanAmount == null || t.avgLoanAmount === ''
+          ? (m ? Math.round(m.avg) : '') : t.avgLoanAmount;
+        var hint = m
+          ? '<div class="hint">from ' + num(m.count) + ' funded &middot; ' + money(m.avg) +
+            ' <button type="button" class="linkbtn" data-use="' + i + '">use</button></div>'
+          : '<div class="hint hint--none">no funded loans yet</div>';
+
+        return '<tr data-i="' + i + '"' + (u.active === false ? ' class="is-inactive"' : '') + '>' +
+          '<td class="namecell">' + esc(u.name || '—') +
+            (u.active === false ? ' <span class="tagoff">inactive</span>' : '') + '</td>' +
+          '<td class="num"><input data-f="bdmBps" type="number" min="0" step="1" value="' + esc(u.bdmBps || 0) + '"></td>' +
+          '<td class="num"><input data-f="sbdmBps" type="number" min="0" step="1" value="' + esc(u.sbdmBps || 0) + '"></td>' +
+          '<td class="num"><input data-t="earningsAnnual" type="number" min="0" step="500" value="' +
+            esc(t.earningsAnnual == null ? '' : t.earningsAnnual) + '"></td>' +
+          '<td class="num"><input data-t="avgLoanAmount" type="number" min="0" step="1000" value="' +
+            esc(avgVal) + '">' + hint + '</td>' +
+          '<td class="num"><input data-t="newDownlineAnnual" type="number" min="0" step="1" value="' +
+            esc(t.newDownlineAnnual == null ? '' : t.newDownlineAnnual) + '"></td>' +
+          '<td class="num"><input data-t="totalDownline" type="number" min="0" step="1" value="' +
+            esc(t.totalDownline == null ? '' : t.totalDownline) + '"></td>' +
+          '</tr>' +
+          '<tr class="derived" data-d="' + i + '"><td colspan="7"></td></tr>';
+      }).join('');
+
+      $('#targets-body').innerHTML = html ||
+        '<tr><td colspan="7" class="emptyrow">Nobody matches &ldquo;' + esc(q) + '&rdquo;.</td></tr>';
+      $('#search-count').textContent = shown + ' of ' + state.roster.length;
+      paint();
     }
 
     function readRow(tr) {
@@ -982,6 +1034,22 @@
       return u;
     }
 
+    /* A rate below 1 is almost certainly a percentage typed into a basis
+       points field — 0.35 instead of 35 — which inflates every derived
+       target a hundredfold. */
+    function checkBps() {
+      var bad = state.roster.filter(function (u) {
+        return (u.bdmBps > 0 && u.bdmBps < 1) || (u.sbdmBps > 0 && u.sbdmBps < 1);
+      });
+      $('#bps-warn').innerHTML = bad.length
+        ? notice('warn', '<p><strong>' + bad.length + ' rate' + (bad.length === 1 ? ' looks' : 's look') +
+            ' like a percentage rather than basis points.</strong> These are basis points: ' +
+            '0.35% is <strong>35</strong>, not 0.35. Entering 0.35 makes every derived target ' +
+            'a hundred times too large.</p><ul class="notice__list">' +
+            bad.map(function (u) { return '<li>' + esc(u.name) + '</li>'; }).join('') + '</ul>')
+        : '';
+    }
+
     function paint() {
       var st2 = settingsNow();
       checkFunnel(st2);
@@ -991,30 +1059,55 @@
         if (!u || !cell) return;
         var dv = deriveTargets(u, st2);
         if (dv.closedVolume == null) {
-          cell.innerHTML = '<span class="derived__none">Enter target earnings and a comp rate to derive the rest.</span>';
+          cell.innerHTML = '<span class="derived__none">Enter a comp rate and an earnings goal to derive the rest.</span>';
           return;
         }
+        function n(v) { return v == null ? null : Math.round(v); }
         function bit(label, val, kind) {
           return '<span class="derived__bit"><em>' + label + '</em>' +
             (val == null ? '—' : fmt(val, kind)) + '</span>';
         }
-        function n(v) { return v == null ? null : Math.round(v); }
         cell.innerHTML = '<div class="derived__row">' +
           bit('Closed volume', dv.closedVolume, 'money') +
           bit('Loans closed', n(dv.loansClosed), 'count') +
           bit('Applications', n(dv.newApplications), 'count') +
           bit('Rescinds', n(dv.expectedRescinds), 'count') +
-          bit('Surviving', n(dv.survivingApps), 'count') +
           bit('In pipeline', n(dv.loansInPipeline), 'count') +
           bit('Pipeline volume', dv.pipelineVolume, 'money') +
           bit('Pre-approved', n(dv.preApprovals), 'count') +
           bit('Early stage', n(dv.earlyStage), 'count') +
           '</div>';
       });
+      checkBps();
     }
 
-    host.addEventListener('input', paint);
-    paint();
+    host.addEventListener('input', function (e) {
+      if (e.target && e.target.id === 'roster-search') { drawRows(); return; }
+      paint();
+    });
+    host.addEventListener('change', paint);
+
+    host.addEventListener('click', function (e) {
+      var i = e.target && e.target.getAttribute && e.target.getAttribute('data-use');
+      if (i == null) return;
+      var u = state.roster[Number(i)];
+      var m = state.measured && state.measured[u.name];
+      if (!u || !m) return;
+      u.targets = u.targets || {};
+      u.targets.avgLoanAmount = Math.round(m.avg);
+      drawRows();
+    });
+
+    /* Measured averages arrive after the table, so it renders immediately
+       and the prefill fills in a moment later. */
+    if (state.measured) {
+      drawRows();
+    } else {
+      drawRows();
+      api('measuredAverages', { key: adminKey() })
+        .then(function (res) { state.measured = res.averages || {}; drawRows(); })
+        .catch(function () { state.measured = {}; });
+    }
 
     doSave('save-targets', function () {
       Array.prototype.forEach.call(document.querySelectorAll('#targets-body tr[data-i]'), readRow);
