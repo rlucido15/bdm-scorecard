@@ -184,7 +184,7 @@
     var stroke = light ? 'var(--cyan-deep)' : 'var(--cyan)';
     if (expected != null) {
       if (ratio >= expected + 0.05) stroke = light ? 'var(--green)' : 'var(--green-on-dark)';
-      else if (ratio < expected - 0.05) stroke = light ? 'var(--coral)' : 'var(--coral-on-dark)';
+      else if (ratio < expected - 0.05) stroke = light ? 'var(--coral-graphic)' : 'var(--coral-on-dark)';
     }
     var tickColour = light ? 'rgba(20,35,43,.45)' : 'rgba(255,255,255,.65)';
 
@@ -325,25 +325,43 @@
       '<div class="tile__body">' + body + '</div></section>';
   }
 
-  function potentialTile(d) {
-    var pl = d.pipeline;
-    return '<section class="tile tile--brand tile--4">' +
-      '<div class="tile__head"><h2 class="tile__title">POTENTIAL EARNINGS</h2>' +
-      '<span class="tile__note">Live loans only</span></div>' +
-      '<div class="tile__body">' +
-      '<p class="htile__label" style="margin-top:8px">IF EVERYTHING IN PLAY FUNDS</p>' +
-      '<p class="htile__value tnum">' + money(pl.potentialEarnings) + '</p>' +
-      '<div class="htile__ctx">' +
-        '<div class="htile__ctxitem"><span class="htile__ctxlabel">IN PIPELINE</span>' +
-        '<span class="htile__ctxvalue tnum">' + num(pl.loansInPipeline) + '</span></div>' +
-        '<div class="htile__ctxitem"><span class="htile__ctxlabel">PRE-APPROVED</span>' +
-        '<span class="htile__ctxvalue tnum">' + num(pl.activePreApprovals) + '</span></div>' +
+  /* Value on the left, context pills stacked on the right — the pills sat
+     under the figure before, which left the card tall and half empty. */
+  function moneyTile(cls, title, note, label, value, pills) {
+    return '<section class="tile ' + cls + '">' +
+      '<div class="tile__head"><h2 class="tile__title">' + title + '</h2>' +
+      (note ? '<span class="tile__note">' + esc(note) + '</span>' : '') + '</div>' +
+      '<div class="tile__body"><div class="moneytile">' +
+        '<div class="moneytile__main">' +
+          '<p class="htile__label">' + esc(label) + '</p>' +
+          '<p class="htile__value tnum">' + value + '</p>' +
+        '</div>' +
+        '<div class="moneytile__pills">' + pills + '</div>' +
       '</div></div></section>';
   }
 
-  /* One infographic card. The ring is the graphic; where a KPI has no
-     target there is nothing meaningful to fill a ring against, so the card
-     falls back to the figure alone rather than drawing a fake proportion. */
+  function ctxPill(label, value) {
+    return '<div class="htile__ctxitem"><span class="htile__ctxlabel">' + esc(label) + '</span>' +
+      '<span class="htile__ctxvalue tnum">' + value + '</span></div>';
+  }
+
+  function potentialTile(d) {
+    var pl = d.pipeline;
+    return moneyTile('tile--brand', 'POTENTIAL EARNINGS', 'Live loans only',
+      'IF EVERYTHING IN PLAY FUNDS', money(pl.potentialEarnings),
+      ctxPill('IN PIPELINE', num(pl.loansInPipeline)) +
+      ctxPill('PRE-APPROVED', num(pl.activePreApprovals)));
+  }
+
+  function lifetimeTile(d) {
+    var lt = d.lifetime || {};
+    return moneyTile('tile--coral', 'LIFETIME EARNINGS',
+      lt.since ? 'Since ' + lt.since : 'Every funded loan on record',
+      'TOTAL EARNED TO DATE', money(lt.earnings),
+      ctxPill('LOANS FUNDED', num(lt.loansClosed)) +
+      ctxPill('VOLUME', money(lt.closedVolume)));
+  }
+
   function statCard(label, value, caption, ratio, expected, accent) {
     var graphic = ratio == null
       ? '<div class="statcard__blank"></div>'
@@ -550,7 +568,7 @@
     return stage(brandbar(d.unit.name, d.periodLabel) + heroBento(d)) +
       '<div class="inner"><div class="bento">' +
         trendTile(d) +
-        potentialTile(d) +
+        '<div class="tile-stack">' + potentialTile(d) + lifetimeTile(d) + '</div>' +
         pipelineTile(d) +
         funnelTile(d) +
         outlookTile(d) +
@@ -929,6 +947,7 @@
             '<span class="searchbox__count" id="search-count"></span>' +
           '</div>' +
         '</div>' +
+        '<div id="measure-warn"></div>' +
         '<div id="bps-warn"></div>' +
         '<div class="scroll-x"><table class="grid-table grid-table--targets">' +
           '<thead>' +
@@ -993,10 +1012,21 @@
         var m = state.measured && state.measured[u.name];
         var avgVal = t.avgLoanAmount == null || t.avgLoanAmount === ''
           ? (m ? Math.round(m.avg) : '') : t.avgLoanAmount;
-        var hint = m
-          ? '<div class="hint">from ' + num(m.count) + ' funded &middot; ' + money(m.avg) +
-            ' <button type="button" class="linkbtn" data-use="' + i + '">use</button></div>'
-          : '<div class="hint hint--none">no funded loans yet</div>';
+
+        /* Three different states, three different messages. Saying "no
+           funded loans" when the lookup never ran would be a failure
+           dressed up as an answer. */
+        var hint;
+        if (state.measuredError) {
+          hint = '<div class="hint hint--none">not checked</div>';
+        } else if (state.measured == null) {
+          hint = '<div class="hint hint--none">checking&hellip;</div>';
+        } else if (m) {
+          hint = '<div class="hint">from ' + num(m.count) + ' funded &middot; ' + money(m.avg) +
+            ' <button type="button" class="linkbtn" data-use="' + i + '">use</button></div>';
+        } else {
+          hint = '<div class="hint hint--none">no funded loans found</div>';
+        }
 
         return '<tr data-i="' + i + '"' + (u.active === false ? ' class="is-inactive"' : '') + '>' +
           '<td class="namecell">' + esc(u.name || '—') +
@@ -1079,6 +1109,17 @@
           '</div>';
       });
       checkBps();
+
+      var mw = $('#measure-warn');
+      if (mw) {
+        mw.innerHTML = state.measuredError
+          ? notice('error', '<p><strong>Could not read average loan sizes from the sheet.</strong> ' +
+              esc(state.measuredError) + '</p><p>This usually means the Apps Script has been ' +
+              'edited but not redeployed. In the script editor: Deploy &rarr; Manage deployments ' +
+              '&rarr; pencil icon &rarr; Version: New version &rarr; Deploy. Averages are not ' +
+              'being prefilled until then.</p>')
+          : '';
+      }
     }
 
     host.addEventListener('input', function (e) {
@@ -1100,13 +1141,18 @@
 
     /* Measured averages arrive after the table, so it renders immediately
        and the prefill fills in a moment later. */
-    if (state.measured) {
-      drawRows();
-    } else {
-      drawRows();
+    drawRows();
+    if (state.measured == null && !state.measuredError) {
       api('measuredAverages', { key: adminKey() })
-        .then(function (res) { state.measured = res.averages || {}; drawRows(); })
-        .catch(function () { state.measured = {}; });
+        .then(function (res) {
+          state.measured = res.averages || {};
+          state.measuredError = null;
+          drawRows();
+        })
+        .catch(function (err) {
+          state.measuredError = err.message || 'Unknown error.';
+          drawRows();
+        });
     }
 
     doSave('save-targets', function () {
