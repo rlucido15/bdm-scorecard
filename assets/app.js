@@ -717,7 +717,10 @@
     var unmatched = (state.diagnostics && state.diagnostics.unmatchedNames) || [];
     var rows = state.roster.map(function (u, i) {
       var link = location.origin + location.pathname + '?t=' + encodeURIComponent(u.token || '');
-      return '<tr data-i="' + i + '">' +
+      var off = u.active === false;
+      return '<tr data-i="' + i + '"' + (off ? ' class="is-inactive"' : '') + '>' +
+        '<td class="right"><input data-f="active" type="checkbox"' + (off ? '' : ' checked') +
+          ' title="Uncheck when someone leaves"></td>' +
         '<td><input data-f="name" value="' + esc(u.name) + '" placeholder="Exactly as it appears in AE / AG"></td>' +
         '<td><input data-f="emails" value="' + esc((u.emails || []).join(', ')) + '" placeholder="one@moxie.com, two@moxie.com"></td>' +
         '<td class="right"><span class="pill ' + (u.token ? 'pill--ok' : 'pill--idle') + '">' +
@@ -735,14 +738,20 @@
         ' in columns AE/AG match nobody in this list.</strong> Loans belonging to ' +
         'them are not appearing on any scorecard.</p><ul class="notice__list">' +
         unmatched.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('') + '</ul>') : '') +
+      notice('info', '<p>Unticking <strong>Active</strong> stops that person\'s monthly email ' +
+        'and disables their link, while keeping their history and settings. Use it when ' +
+        'someone leaves rather than deleting them.</p>') +
       notice('info', '<p>Names must match the pipeline sheet exactly. A pair is one entry: ' +
         'type it the way the sheet does, such as <em>Chad Shimabukuro / Colette Ching</em>. ' +
         'Both people get the same report at both addresses. Order around the slash does not matter.</p>') +
       '<div class="scroll-x"><table class="grid-table">' +
-        '<thead><tr><th style="width:28%">Name in pipeline</th><th style="width:30%">Email addresses</th>' +
+        '<thead><tr><th class="right" style="width:52px">Active</th>' +
+        '<th style="width:26%">Name in pipeline</th><th style="width:28%">Email addresses</th>' +
         '<th class="right">Private link</th><th class="right">Actions</th></tr></thead>' +
         '<tbody id="roster-body">' + rows + '</tbody></table></div>' +
-      '<div class="row"><button class="btn btn--ghost" id="add-unit">Add a person or pair</button></div>' +
+      '<div class="row"><button class="btn btn--ghost" id="add-unit">Add a person or pair</button>' +
+      '<button class="btn btn--ghost" id="import-names">Import every name from the pipeline</button>' +
+      '<span id="import-status" class="muted"></span></div>' +
       savebar('save-roster') +
       '</div>';
 
@@ -763,6 +772,26 @@
         }
         panelRoster(host);
       });
+    });
+
+    $('#import-names').addEventListener('click', function () {
+      var btn = this, status = $('#import-status');
+      if (!window.confirm('Add every name found in columns AE/AG that isn\'t already ' +
+        'on the roster? Spelling comes straight from the sheet, so nothing can mismatch.')) return;
+      btn.disabled = true;
+      status.textContent = 'Importing…';
+      apiPost('importNames', {})
+        .then(function (res) {
+          if (!res.verified) throw new Error('The backend could not read back what it wrote.');
+          state.config = res.config;
+          state.roster = res.config.units || [];
+          status.textContent = res.added.length
+            ? 'Added ' + res.added.length + '. Set emails and targets next.'
+            : 'Nothing to add — every name already matches.';
+          panelRoster(host);
+        })
+        .catch(function (err) { status.textContent = 'Failed. ' + err.message; })
+        .then(function () { btn.disabled = false; });
     });
 
     doSave('save-roster', function () {
@@ -786,6 +815,7 @@
       u.name = $('[data-f="name"]', tr).value.trim();
       u.emails = $('[data-f="emails"]', tr).value.split(',')
         .map(function (s) { return s.trim(); }).filter(Boolean);
+      u.active = $('[data-f="active"]', tr).checked;
     });
   }
 
@@ -1162,6 +1192,16 @@
       '</div>' +
       '<div class="row"><button class="btn btn--ghost" id="test-conn">Test both connections</button></div>' +
       '<div id="conn-out">' + connStatus(d) + '</div>' +
+      '<h3 style="margin:26px 0 0;font-size:15px">Backup</h3>' +
+      notice('info', '<p>Your roster, targets and email template live in the Apps Script ' +
+        'project\'s properties. They survive re-pasting the code and redeploying. They do ' +
+        '<strong>not</strong> survive deleting the project, so keep a copy of this somewhere.</p>') +
+      '<div class="row"><div class="field field--grow">' +
+        '<label for="cfgjson">Configuration</label>' +
+        '<textarea id="cfgjson" spellcheck="false">' + esc(JSON.stringify(state.config, null, 2)) + '</textarea>' +
+      '</div></div>' +
+      '<div class="row"><button class="btn btn--warn" id="restore-cfg">Restore from the text above</button>' +
+      '<span id="restore-status" class="muted"></span></div>' +
       savebar('save-conn') + '</div>';
 
     $('#test-conn').addEventListener('click', function () {
@@ -1173,6 +1213,21 @@
       }).catch(function (err) {
         out.innerHTML = notice('error', '<p>' + esc(err.message) + '</p>');
       });
+    });
+
+    $('#restore-cfg').addEventListener('click', function () {
+      if (!window.confirm('This replaces the entire saved configuration — roster, targets ' +
+        'and email template. Continue?')) return;
+      var status = $('#restore-status');
+      status.textContent = 'Restoring…';
+      apiPost('restoreConfig', { json: $('#cfgjson').value })
+        .then(function (res) {
+          if (!res.verified) throw new Error('The backend could not read back what it wrote.');
+          state.config = res.config;
+          state.roster = res.config.units || [];
+          status.textContent = 'Restored ' + res.restored + ' people.';
+        })
+        .catch(function (err) { status.textContent = 'Failed. ' + err.message; });
     });
 
     doSave('save-conn', function () {
