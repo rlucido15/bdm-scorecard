@@ -698,6 +698,71 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .btn--warn:hover { background: #E25432; border-color: #E25432; }
 .btn--sm { padding: 5px 11px; font-size: 13.5px; }
 
+/* ---------- Admin sections ---------- */
+
+.sect {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-tile);
+  box-shadow: var(--shadow-card);
+  margin-top: 18px;
+  overflow: hidden;
+}
+.sect__head {
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--card-2);
+}
+.sect__head--split { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; }
+.sect__title {
+  margin: 0; font-family: 'Barlow Semi Condensed', 'Barlow', sans-serif;
+  font-size: 17px; font-weight: 700; letter-spacing: .05em; color: var(--ink);
+}
+.sect__note { margin: 4px 0 0; font-size: 13px; color: var(--ink-2); max-width: 68ch; line-height: 1.45; }
+.sect__body { padding: 16px 20px 18px; }
+
+.fieldgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 12px; }
+
+/* Unit suffix inside the input, so the label doesn't carry it */
+.unitwrap { position: relative; }
+.unitwrap input { padding-right: 44px; text-align: right; }
+.unit {
+  position: absolute; right: 11px; top: 50%; transform: translateY(-50%);
+  font-size: 12px; font-weight: 600; color: var(--ink-3); pointer-events: none;
+}
+
+.searchbox { display: flex; align-items: center; gap: 10px; }
+.searchbox input {
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 8px 15px; min-width: 220px; background: #fff;
+}
+.searchbox input:focus { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.searchbox__count { font-size: 12.5px; color: var(--ink-3); white-space: nowrap; }
+
+/* Grouped table headers give the columns some structure */
+.grouprow th { border-bottom: 0; padding-bottom: 2px; }
+.grouphead {
+  font-size: 10px; font-weight: 700; letter-spacing: .12em;
+  color: var(--ink-3); text-align: center;
+  border-bottom: 1px solid var(--line) !important;
+}
+.grid-table--targets thead tr:last-child th { padding-top: 8px; }
+.grid-table--targets .namecell { font-weight: 600; color: var(--ink); }
+.grid-table--targets td { vertical-align: top; }
+.grid-table--targets td.num input { margin-bottom: 0; }
+
+.hint { font-size: 10.5px; color: var(--ink-3); padding: 4px 2px 0; text-align: right; line-height: 1.3; }
+.hint--none { font-style: italic; }
+.linkbtn {
+  background: none; border: 0; padding: 0 0 0 4px; cursor: pointer;
+  color: var(--cyan-deep); font-weight: 700; font-size: 10.5px; text-decoration: underline;
+}
+.tagoff {
+  font-size: 10px; font-weight: 700; letter-spacing: .08em;
+  background: #E9EEF2; color: var(--ink-3); border-radius: 999px; padding: 2px 7px;
+}
+.emptyrow { text-align: center; color: var(--ink-3); font-style: italic; padding: 26px 10px; }
+
 table.grid-table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
 .grid-table th, .grid-table td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
 .grid-table th { color: var(--ink-2); font-weight: 600; font-size: 13px; }
