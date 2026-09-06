@@ -16,7 +16,7 @@
    * 1. CONNECTION  — paste your deployed Apps Script /exec URL here
    * ============================================================ */
   var PIPELINE_API = window.MOXIE_API_URL ||
-    'https://script.google.com/macros/s/AKfycbyCHntYkVEp9Mi9QhB9Ys9MxreydF_RVQpVGR0d2ZLTJtwBeCvwfNOP-KYgsUQxHmvT/exec';
+    'https://script.google.com/macros/s/PASTE_PIPELINE_DEPLOYMENT_ID/exec';
 
   /* ============================================================
    * 2. Small helpers
@@ -354,7 +354,17 @@
   }
 
   function lifetimeTile(d) {
-    var lt = d.lifetime || {};
+    /* An absent `lifetime` means the backend predates this card. Say so —
+       rendering dashes would look like a genuine zero. */
+    if (!d.lifetime) {
+      return '<section class="tile tile--coral">' +
+        '<div class="tile__head"><h2 class="tile__title">LIFETIME EARNINGS</h2></div>' +
+        '<div class="tile__body"><p class="lifetime__missing">' +
+        'The Apps Script needs redeploying before this figure is available. ' +
+        'In the script editor: Deploy &rarr; Manage deployments &rarr; pencil &rarr; ' +
+        'New version &rarr; Deploy.</p></div></section>';
+    }
+    var lt = d.lifetime;
     return moneyTile('tile--coral', 'LIFETIME EARNINGS',
       lt.since ? 'Since ' + lt.since : 'Every funded loan on record',
       'TOTAL EARNED TO DATE', money(lt.earnings),
