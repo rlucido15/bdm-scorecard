@@ -9,7 +9,7 @@
 (function () {
   'use strict';
 
-  var BUILD = '2026.09.06.4';
+  var BUILD = '2026.09.06.10';
 
   function asset(path) {
     return 'assets/' + path + '?v=' + BUILD;
