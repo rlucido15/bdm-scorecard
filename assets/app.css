@@ -680,6 +680,94 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .legend__sw { width: 10px; height: 10px; border-radius: 3px; background: var(--cyan); }
 .legend__sw--prior { background: #CBD8E0; }
 
+/* ---------- Agent partners ---------- */
+
+.astats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  padding: 10px 0 16px;
+  border-bottom: 1px solid var(--line);
+}
+/* A lighter slate than the near-black tiles elsewhere — still clearly dark,
+   but it sits closer to the light section around it. */
+.astat {
+  display: flex; flex-direction: column; gap: 2px;
+  background: linear-gradient(150deg, #33505E, #24404E);
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 12px; padding: 13px 15px;
+  box-shadow: 0 8px 18px rgba(20, 35, 43, .16);
+}
+.astat__label {
+  font-size: 10px; font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; color: #A9C0CC;
+}
+.astat__value { font-size: 25px; font-weight: 700; letter-spacing: -.02em; color: #fff; line-height: 1.15; }
+.astat__sub { font-size: 11.5px; color: rgba(255, 255, 255, .66); }
+
+/* Reviews sit on the same slate as the agent counts. The distinction is
+   carried by the figure and the edge — a tinted fill turned muddy against
+   this ground. */
+.astat--reviews { border-color: rgba(255, 201, 107, .40); }
+.astat--reviews .astat__value { color: #FFC96B; }
+.astat--reviews .astat__label { color: #E4CBA3; }
+
+.astars { display: flex; gap: 2px; margin: 5px 0 1px; }
+.astar { width: 13px; height: 13px; fill: #FFC96B; display: block; flex: 0 0 auto; }
+
+.agrid {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 22px;
+  padding-top: 16px;
+}
+.apanel { min-width: 0; }
+.apanel__title {
+  margin: 0 0 10px;
+  font-family: 'Barlow Semi Condensed', 'Barlow', sans-serif;
+  font-size: 13px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink-2);
+}
+.apanel__title--spaced { margin-top: 20px; }
+
+.alist { display: grid; gap: 7px; }
+.arow {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 178px) minmax(70px, 150px) 30px;
+  gap: 12px; align-items: center;
+  justify-content: start;
+}
+.arow__rank { font-size: 11px; font-weight: 700; color: var(--ink-3); text-align: right; }
+.arow__name {
+  font-size: 14px; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.arow__track { height: 8px; background: #E6ECF0; border-radius: 99px; overflow: hidden; }
+.arow__fill { height: 100%; background: linear-gradient(90deg, var(--cyan-deep), var(--cyan)); }
+.arow__val { font-weight: 700; font-size: 14px; text-align: right; }
+
+.amove {
+  display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: baseline;
+  padding: 7px 11px; border-radius: 9px; margin-bottom: 6px;
+  border: 1px solid var(--line); background: var(--card-2);
+}
+.amove__name {
+  font-size: 13.5px; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.amove__delta { font-size: 14px; font-weight: 700; }
+.amove--up { border-left: 3px solid var(--green); }
+.amove--up .amove__delta { color: var(--green); }
+.amove--down { border-left: 3px solid var(--coral-graphic); }
+.amove--down .amove__delta { color: var(--coral); }
+.amove__detail { font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+.amove__none { margin: 0 0 6px; font-size: 13px; color: var(--ink-3); font-style: italic; }
+
+@media (max-width: 900px) {
+  .agrid { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .arow { grid-template-columns: 16px minmax(0, 1fr) minmax(50px, 90px) 28px; }
+}
+
 /* ---------- Notices ---------- */
 
 .notice { border-radius: var(--r-inner); padding: 13px 16px; font-size: 14px; margin-top: 14px; border: 1px solid transparent; }
