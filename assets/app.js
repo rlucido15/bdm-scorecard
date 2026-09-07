@@ -574,6 +574,91 @@
       '<div class="chart__plot">' + cols + '</div></div>' + legend);
   }
 
+  /* Five filled stars. Marked as one image with a label rather than five
+     separate graphics, so a screen reader says "five stars" once. */
+  function starRow() {
+    var star = '<svg class="astar" viewBox="0 0 24 24" aria-hidden="true">' +
+      '<path d="M12 2.2l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.21 ' +
+      '6.12 20.31l1.12-6.55L2.48 9.12l6.58-.96z"/></svg>';
+    return '<span class="astars" role="img" aria-label="Five stars">' +
+      star + star + star + star + star + '</span>';
+  }
+
+  function agentsTile(d) {
+    var a = d.agents;
+    if (!a) return '';
+    if (a.available === false) {
+      return tile('tile--12', 'AGENT PARTNERS', '',
+        notice('warn', '<p>No agent column is configured yet. Set ' +
+          '<code>COL.agent</code> in the Apps Script to the column holding the ' +
+          'referring agent, then redeploy.</p>'));
+    }
+    if (!a.totalAgents) {
+      return tile('tile--12', 'AGENT PARTNERS', 'Year to date',
+        '<p class="mrow__off">No funded loans with an agent named this year.</p>');
+    }
+
+    function stat(label, value, sub) {
+      return '<div class="astat"><span class="astat__label">' + esc(label) + '</span>' +
+        '<span class="astat__value tnum">' + value + '</span>' +
+        (sub ? '<span class="astat__sub">' + esc(sub) + '</span>' : '') + '</div>';
+    }
+
+    var summary = '<div class="astats">' +
+      stat('Agents closed with', num(a.totalAgents), 'year to date') +
+      stat('New this year', num(a.newThisYear), 'first deal with you') +
+      stat('Sent more than one', num(a.repeatAgents), 'repeat partners') +
+      '<div class="astat astat--reviews">' +
+        '<span class="astat__label">5-star reviews</span>' +
+        '<span class="astat__value tnum">' + num(a.reviewsYtd) + '</span>' +
+        starRow() +
+        '<span class="astat__sub">from clients, year to date</span>' +
+      '</div>' +
+      '</div>';
+
+    var max = a.top.length ? a.top[0].deals : 1;
+    var leaders = a.top.map(function (t, i) {
+      return '<div class="arow">' +
+        '<span class="arow__rank">' + (i + 1) + '</span>' +
+        '<span class="arow__name">' + esc(t.name) + '</span>' +
+        '<div class="arow__track"><div class="arow__fill" style="width:' +
+          ((t.deals / max) * 100).toFixed(1) + '%"></div></div>' +
+        '<span class="arow__val tnum">' + num(t.deals) + '</span></div>';
+    }).join('');
+
+    function movers(list, kind) {
+      if (!list.length) {
+        return '<p class="amove__none">' +
+          (kind === 'up' ? 'Nobody is ahead of last year yet.' : 'Nobody is behind last year.') +
+          '</p>';
+      }
+      return list.map(function (m) {
+        return '<div class="amove amove--' + kind + '">' +
+          '<span class="amove__name">' + esc(m.name) + '</span>' +
+          '<span class="amove__delta tnum">' + (m.delta > 0 ? '+' : '') + num(m.delta) + '</span>' +
+          '<span class="amove__detail tnum">' + num(m.current) + ' vs ' + num(m.prior) + '</span>' +
+          '</div>';
+      }).join('');
+    }
+
+    var body = summary +
+      '<div class="agrid">' +
+        '<div class="apanel">' +
+          '<h3 class="apanel__title">Top partners</h3>' +
+          '<div class="alist">' + leaders + '</div>' +
+        '</div>' +
+        '<div class="apanel">' +
+          '<h3 class="apanel__title">Sending more than last year</h3>' +
+          movers(a.risers, 'up') +
+          '<h3 class="apanel__title apanel__title--spaced">Sending less than last year</h3>' +
+          movers(a.fallers, 'down') +
+        '</div>' +
+      '</div>';
+
+    return tile('tile--12', 'AGENT PARTNERS',
+      'Funded loans, year to date against the same span last year', body);
+  }
+
   function scorecardHtml(d) {
     return stage(brandbar(d.unit.name, d.periodLabel) + heroBento(d)) +
       '<div class="inner"><div class="bento">' +
@@ -583,6 +668,7 @@
         funnelTile(d) +
         outlookTile(d) +
         downlineTile(d) +
+        agentsTile(d) +
       '</div>' +
       '<p class="foot">Generated ' + esc(d.generatedAt) + '. Figures come straight from the loan pipeline; ' +
       'if something looks wrong, check the file in the sheet first.</p></div>';
