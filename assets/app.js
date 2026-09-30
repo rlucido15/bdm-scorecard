@@ -108,11 +108,11 @@
       .then(readJson);
   }
 
-  /* Writes go over GET in chunks rather than as one POST.
-     A cross-origin POST to Apps Script is answered with a redirect, and in
-     some Workspace configurations the far end returns HTML — unrecoverable
-     in the browser. GET is already proven to work, so the payload is split
-     across query parameters and reassembled server side. */
+  /* Writes go over GET in chunks, not POST.
+     A cross-origin POST to this deployment comes back as HTML rather than
+     JSON — confirmed twice — while GET works reliably. The payload is split
+     across query parameters and reassembled by the backend, which acts only
+     once the final chunk arrives. */
   function apiPost(action, payload) {
     var body = JSON.stringify(payload || {});
     var CHUNK = 4000;
@@ -122,8 +122,7 @@
     for (var i = 0; i < body.length; i += CHUNK) chunks.push(body.slice(i, i + CHUNK));
     if (!chunks.length) chunks.push('');
 
-    /* Sequential, not parallel: the server acts on the final chunk, so it
-       must be the last one to arrive. */
+    /* Sequential, not parallel — the last chunk triggers the write. */
     var seq = Promise.resolve(null);
     chunks.forEach(function (part, idx) {
       seq = seq.then(function () {
