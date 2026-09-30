@@ -16,7 +16,7 @@
    * 1. CONNECTION  — paste your deployed Apps Script /exec URL here
    * ============================================================ */
   var PIPELINE_API = window.MOXIE_API_URL ||
-    'https://script.google.com/macros/s/AKfycbyCHntYkVEp9Mi9QhB9Ys9MxreydF_RVQpVGR0d2ZLTJtwBeCvwfNOP-KYgsUQxHmvT/exec';
+    'https://script.google.com/macros/s/AKfycbwEYhNn38D8WV9tjDiLIIKiiJE6G7aOWqUGSmnTKZ77tski0c0MfCLxv8y35WyTf5y5YA/exec';
 
   /* ============================================================
    * 2. Small helpers
@@ -586,16 +586,17 @@
 
   function agentsTile(d) {
     var a = d.agents;
-    if (!a) return '';
-    if (a.available === false) {
+
+    /* No agents object at all means the backend predates this section.
+       Returning nothing would make the whole box vanish without explaining
+       why, which is exactly how a stale deployment hides itself. */
+    if (!a) {
       return tile('tile--12', 'AGENT PARTNERS', '',
-        notice('warn', '<p>No agent column is configured yet. Set ' +
-          '<code>COL.agent</code> in the Apps Script to the column holding the ' +
-          'referring agent, then redeploy.</p>'));
-    }
-    if (!a.totalAgents) {
-      return tile('tile--12', 'AGENT PARTNERS', 'Year to date',
-        '<p class="mrow__off">No funded loans with an agent named this year.</p>');
+        notice('error', '<p><strong>The Apps Script needs redeploying before this ' +
+          'section can load.</strong> Editing the code does not change what the ' +
+          '/exec URL serves.</p><p>In the script editor: Deploy &rarr; Manage ' +
+          'deployments &rarr; pencil icon &rarr; Version: New version &rarr; Deploy. ' +
+          'Use the pencil on the existing deployment, not New deployment.</p>'));
     }
 
     function stat(label, value, sub) {
@@ -604,16 +605,33 @@
         (sub ? '<span class="astat__sub">' + esc(sub) + '</span>' : '') + '</div>';
     }
 
+    var reviewsCard = '<div class="astat astat--reviews">' +
+      '<span class="astat__label">5-star reviews</span>' +
+      '<span class="astat__value tnum">' + num(a.reviewsYtd) + '</span>' +
+      starRow() +
+      '<span class="astat__sub">from clients, year to date</span>' +
+      '</div>';
+
+    /* The agent column is optional; reviews come from AX/AY regardless. */
+    if (a.available === false) {
+      return tile('tile--12', 'AGENT PARTNERS', 'Year to date',
+        '<div class="astats astats--single">' + reviewsCard + '</div>' +
+        notice('warn', '<p>Agent partner figures need a column. Set ' +
+          '<code>COL.agent</code> in the Apps Script to the column holding the ' +
+          'referring agent, then redeploy.</p>'));
+    }
+
+    if (!a.totalAgents) {
+      return tile('tile--12', 'AGENT PARTNERS', 'Year to date',
+        '<div class="astats astats--single">' + reviewsCard + '</div>' +
+        '<p class="mrow__off">No funded loans with an agent named this year.</p>');
+    }
+
     var summary = '<div class="astats">' +
       stat('Agents closed with', num(a.totalAgents), 'year to date') +
       stat('New this year', num(a.newThisYear), 'first deal with you') +
       stat('Sent more than one', num(a.repeatAgents), 'repeat partners') +
-      '<div class="astat astat--reviews">' +
-        '<span class="astat__label">5-star reviews</span>' +
-        '<span class="astat__value tnum">' + num(a.reviewsYtd) + '</span>' +
-        starRow() +
-        '<span class="astat__sub">from clients, year to date</span>' +
-      '</div>' +
+      reviewsCard +
       '</div>';
 
     var max = a.top.length ? a.top[0].deals : 1;
