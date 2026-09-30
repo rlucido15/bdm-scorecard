@@ -108,13 +108,32 @@
       .then(readJson);
   }
 
+  /* Writes go over GET in chunks rather than as one POST.
+     A cross-origin POST to Apps Script is answered with a redirect, and in
+     some Workspace configurations the far end returns HTML — unrecoverable
+     in the browser. GET is already proven to work, so the payload is split
+     across query parameters and reassembled server side. */
   function apiPost(action, payload) {
-    return fetch(PIPELINE_API, {
-      method: 'POST',
-      redirect: 'follow',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: action, key: adminKey(), payload: payload })
-    }).then(readJson);
+    var body = JSON.stringify(payload || {});
+    var CHUNK = 4000;
+    var id = Math.random().toString(36).slice(2) + Date.now().toString(36);
+
+    var chunks = [];
+    for (var i = 0; i < body.length; i += CHUNK) chunks.push(body.slice(i, i + CHUNK));
+    if (!chunks.length) chunks.push('');
+
+    /* Sequential, not parallel: the server acts on the final chunk, so it
+       must be the last one to arrive. */
+    var seq = Promise.resolve(null);
+    chunks.forEach(function (part, idx) {
+      seq = seq.then(function () {
+        return api('write', {
+          k: adminKey(), op: action, id: id,
+          i: idx, n: chunks.length, d: part
+        });
+      });
+    });
+    return seq;
   }
 
   function readJson(res) {
@@ -767,11 +786,20 @@
       .then(function (data) {
         state.config = data.config;
         state.roster = data.config.units || [];
-        state.diagnostics = data.diagnostics || {};
+        state.diagnostics = state.diagnostics || {};
         app.setAttribute('data-state', 'ready');
         app.innerHTML = adminShell();
         wireTabs();
         renderPanel();
+
+        /* Diagnostics read the whole sheet and call the downline web app,
+           so they arrive after the console is usable rather than before. */
+        api('diagnostics', { key: adminKey() })
+          .then(function (res) {
+            state.diagnostics = res.diagnostics || {};
+            if (state.activeTab === 'roster' || state.activeTab === 'connections') renderPanel();
+          })
+          .catch(function () { /* the Connections tab can retry on demand */ });
       })
       .catch(function (err) {
         adminKey('');
