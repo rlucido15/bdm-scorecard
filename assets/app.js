@@ -1,4 +1,4 @@
-/* Moxie BDM / sBDM Performance Scorecard — front end
+  /* Moxie BDM / sBDM Performance Scorecard — front end
  *
  * Two modes, one file:
  *   index.html            -> admin console (requires admin key)
@@ -16,7 +16,7 @@
    * 1. CONNECTION  — paste your deployed Apps Script /exec URL here
    * ============================================================ */
   var PIPELINE_API = window.MOXIE_API_URL ||
-    'https://script.google.com/macros/s/AKfycbwEYhNn38D8WV9tjDiLIIKiiJE6G7aOWqUGSmnTKZ77tski0c0MfCLxv8y35WyTf5y5YA/exec';
+    ''https://script.google.com/macros/s/AKfycbwEYhNn38D8WV9tjDiLIIKiiJE6G7aOWqUGSmnTKZ77tski0c0MfCLxv8y35WyTf5y5YA/exec';
 
   /* ============================================================
    * 2. Small helpers
@@ -115,7 +115,10 @@
      once the final chunk arrives. */
   function apiPost(action, payload) {
     var body = JSON.stringify(payload || {});
-    var CHUNK = 4000;
+    /* Kept small deliberately. A long query string appears to be rejected
+       before it reaches the script — short reads work, long writes do not —
+       so chunks stay well under any URL limit even after encoding. */
+    var CHUNK = 700;
     var id = Math.random().toString(36).slice(2) + Date.now().toString(36);
 
     var chunks = [];
@@ -141,8 +144,15 @@
       try {
         data = JSON.parse(txt);
       } catch (e) {
+        /* Show what actually came back. A generic message here hid the real
+           cause for hours; the first line of the HTML usually names it. */
+        var peek = String(txt || '')
+          .replace(/<[^>]*>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 160);
         throw new Error('The backend replied with something that was not JSON. ' +
-          'This usually means the Apps Script threw an error or the deployment URL is wrong.');
+          (peek ? 'It said: "' + peek + '"' : 'The reply was empty.'));
       }
       if (data && data.ok === false) throw new Error(data.error || 'The backend rejected that request.');
       return data;
@@ -793,7 +803,7 @@
 
         /* Diagnostics read the whole sheet and call the downline web app,
            so they arrive after the console is usable rather than before. */
-        api('diagnostics', { key: adminKey() })
+        api('diagnostics', { key: adminKey(), quick: '1' })
           .then(function (res) {
             state.diagnostics = res.diagnostics || {};
             if (state.activeTab === 'roster' || state.activeTab === 'connections') renderPanel();
@@ -1517,6 +1527,10 @@
 
   function connStatus(d) {
     var out = '';
+    if (d.downlineOk === null) {
+      /* Not an error — the check simply has not been run yet. */
+      d = Object.assign({}, d, { downlineOk: false });
+    }
     out += d.pipelineOk
       ? notice('ok', '<p>Pipeline sheet reachable. ' + num(d.pipelineRows) + ' rows read.</p>')
       : notice('error', '<p>Pipeline sheet unreachable. ' + esc(d.pipelineError || '') + '</p>');
