@@ -9,7 +9,7 @@
 (function () {
   'use strict';
 
-  var BUILD = '5';
+  var BUILD = '6';
 
   function asset(path) {
     return 'assets/' + path + '?v=' + BUILD;
